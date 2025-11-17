@@ -32,10 +32,10 @@ jobs:
           dotnet-version: "8.0.x" # Change if needed
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore UmbracoBackend/UmbracoBackend.csproj
 
       - name: Build backend
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
 
       - name: Start Umbraco backend
         run: |
