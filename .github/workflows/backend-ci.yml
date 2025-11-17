@@ -1,0 +1,56 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Placeholder: add static tests later
+      - name: Static checks placeholder
+        run: echo "Static checks will go here later"
+
+  api-tests:
+    runs-on: ubuntu-latest
+    needs: static-checks
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x" # Change if needed
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Start Umbraco backend
+        run: |
+          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:5000 &
+          echo "Waiting for Umbraco to start..."
+          sleep 25   # give Umbraco some extra startup time
+          
+      - name: Setup Node (Newman)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Run Postman tests with Newman
+        run: |
+          newman run postman/backend-collection.json \
+            --env-var baseUrl=http://localhost:5000
