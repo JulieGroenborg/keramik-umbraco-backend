@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - pipeline_setup # denne bare tilføjet så jeg kunne køre pipeline i min branch og skal fjernes senere
+      - pipeline_setup # denne bare tilføjet så jeg kunne køre pipeline i min branch og skal fjernes senere.
 
 jobs:
   statiske-tests:
