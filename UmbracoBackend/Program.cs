@@ -4,6 +4,8 @@ using Umbraco.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers(); // Slet når vi har lavet vores egne API'er
+
 builder.CreateUmbracoBuilder()
     .AddBackOffice()
     .AddWebsite()
@@ -28,5 +30,7 @@ app.UseUmbraco()
         u.UseBackOfficeEndpoints();
         u.UseWebsiteEndpoints();
     });
+
+app.MapControllers(); // Slet når vi har lavet vores egne API'er
 
 await app.RunAsync();
