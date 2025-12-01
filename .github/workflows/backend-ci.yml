@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - pipeline_setup # denne bare tilføjet så jeg kunne køre pipeline i min branch og skal fjernes senere.
 
 jobs:
   statiske-tests:
@@ -38,8 +37,9 @@ jobs:
         run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore # Release for at køre et build der ligner produktion mest muligt, --no-restore fordi vi allerede har restored
 
       - name: Start Umbraco backend
+        # for at sikre vi bruger den rigtige port
         run: |
-          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:5000 & # for at sikre vi bruger den rigtige port
+          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:5000 &
           echo "Giver lige umbraco 25 sekunder til at starte op"
           sleep 25
           
@@ -54,4 +54,5 @@ jobs:
       - name: Run Postman tests with Newman # kører vores Postman tests
         run: |
           newman run postman/backend-collection.json \
-            --env-var baseUrl=http://localhost:5000 # Giver postman en variabel
+            --env-var baseUrl=http://localhost:5000
+        # Giver postman en variabel
