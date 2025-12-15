@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Umbraco.Cms.Core.DependencyInjection;
-using Umbraco.Extensions;
 using DotNetEnv;       // For .env support
 using Stripe;
 
