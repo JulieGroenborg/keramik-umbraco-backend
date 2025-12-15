@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Stripe.net" Version="50.0.0" />
     <PackageReference Include="Umbraco.Cms" Version="13.11.0" />
     <PackageReference Include="uSync" Version="13.3.2" />
   </ItemGroup>

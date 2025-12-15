@@ -1,11 +1,36 @@
-using Microsoft.AspNetCore.Builder;
-using Umbraco.Cms.Core.DependencyInjection;
-using Umbraco.Extensions;
+using DotNetEnv;       // For .env support
+using Stripe;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers(); // Slet når vi har lavet vores egne API'er
+// 1️⃣ Load environment variables from .env
+Env.Load(); 
 
+// 2️⃣ Read Stripe secret key and set globally
+var stripeKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+if (string.IsNullOrEmpty(stripeKey))
+    throw new Exception("Stripe secret key is not set in environment variables.");
+
+StripeConfiguration.ApiKey = stripeKey;
+
+// 3️⃣ Register controllers
+builder.Services.AddControllers();
+
+// 4️⃣ Secure CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SecureFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",          // Local dev frontend
+                "https://www.yourdomain.com"      // Production frontend
+            )
+            .WithHeaders("Content-Type")          // Allow only needed headers
+            .WithMethods("GET", "POST");          // Allow only needed methods
+    });
+});
+
+// 5️⃣ Build Umbraco
 builder.CreateUmbracoBuilder()
     .AddBackOffice()
     .AddWebsite()
@@ -15,8 +40,11 @@ builder.CreateUmbracoBuilder()
 
 WebApplication app = builder.Build();
 
+// 6️⃣ Boot Umbraco
 await app.BootUmbracoAsync();
 
+// 7️⃣ Configure middleware and endpoints
+app.UseCors("SecureFrontend");  // Apply CORS **before controllers**
 
 app.UseUmbraco()
     .WithMiddleware(u =>
@@ -31,6 +59,7 @@ app.UseUmbraco()
         u.UseWebsiteEndpoints();
     });
 
-app.MapControllers(); // Slet når vi har lavet vores egne API'er
+// 8️⃣ Map your API controllers
+app.MapControllers();
 
 await app.RunAsync();
