@@ -60,6 +60,12 @@ namespace server.Controllers
             {
                 LineItems = lineItems,
                 Mode = "payment",
+
+                ShippingAddressCollection = new SessionShippingAddressCollectionOptions
+                {
+                    AllowedCountries = new List<string> { "DK", "SE", "DE" }
+                },
+
                 // Brugeren bliver redirected hertil efter succesfuld payment
                 SuccessUrl = domain + "/success?session_id={CHECKOUT_SESSION_ID}",
 
