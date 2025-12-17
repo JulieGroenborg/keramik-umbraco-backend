@@ -29,7 +29,6 @@ namespace server.Controllers
 
             var domain = "http://localhost:3000"; //Domænet som Stripe skal bruge til at redirect brugeren til efter checkout (succes or cancellation)
 
-
             // Stripe Checkout forventer line items i et specifikt format, så vi konverterer vores kurv items into Stripe line items her
             var lineItems = new List<SessionLineItemOptions>();
 
