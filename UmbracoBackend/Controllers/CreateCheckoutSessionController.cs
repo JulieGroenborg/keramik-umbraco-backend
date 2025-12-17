@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Stripe.Checkout;
-using DotNetEnv; 
 
 namespace server.Controllers
 {
@@ -28,8 +27,7 @@ namespace server.Controllers
             if (items == null || items.Count == 0)
                 return BadRequest(new { error = "Cart is empty" });
 
-            var domain = Environment.GetEnvironmentVariable("DOMAIN_URL"); //Domænet som Stripe skal bruge til at redirect brugeren til efter checkout (succes or cancellation)
-
+            var domain = "http://localhost:3000"; //Domænet som Stripe skal bruge til at redirect brugeren til efter checkout (succes or cancellation)
 
             // Stripe Checkout forventer line items i et specifikt format, så vi konverterer vores kurv items into Stripe line items her
             var lineItems = new List<SessionLineItemOptions>();
@@ -61,6 +59,12 @@ namespace server.Controllers
             {
                 LineItems = lineItems,
                 Mode = "payment",
+
+                ShippingAddressCollection = new SessionShippingAddressCollectionOptions
+                {
+                    AllowedCountries = new List<string> { "DK", "SE", "DE" }
+                },
+
                 // Brugeren bliver redirected hertil efter succesfuld payment
                 SuccessUrl = domain + "/success?session_id={CHECKOUT_SESSION_ID}",
 
