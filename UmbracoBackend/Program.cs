@@ -22,8 +22,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SecureFrontend", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:3000",          // Local dev frontend
-                "https://www.yourdomain.com"      // Production frontend
+                "http://localhost:3000",                         // Local dev frontend
+                "https://keramik-nextjs-frontend.vercel.app"     // Production frontend
             )
             .WithHeaders("Content-Type")          // Allow only needed headers
             .WithMethods("GET", "POST");          // Allow only needed methods
