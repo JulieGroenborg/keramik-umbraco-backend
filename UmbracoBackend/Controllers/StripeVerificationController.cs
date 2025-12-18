@@ -28,7 +28,7 @@ namespace server.Controllers
                 return BadRequest("Payment not completed");
             }
 
-            // If payment is calid, return relevant order information. This data can be shown on the confirmation page
+            // If payment is valid, return relevant order information. This data can be shown on the confirmation page
             return Ok(new { });
         }
     }
