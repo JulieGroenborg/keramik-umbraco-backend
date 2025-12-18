@@ -1,38 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
-using Stripe;
 using Stripe.Checkout;
 
 
 namespace server.Controllers
 {
     [ApiController]
-    [Route("stripe-api")]
+    // Full endpoint bliver: /stripe-api/verify-session
+    [Route("stripe-api")] 
     public class StripeVerificationController : ControllerBase
     {
+        // GET endpoint bruges efter returning fra Stripe Checkout
         [HttpGet("verify-session")]
         public ActionResult VerifySession([FromQuery] string sessionId)
         {
             var sessionService = new SessionService();
+
+            // Fetch the Checkout Session directly fra Stripe
             var session = sessionService.Get(sessionId);
 
+            // If the session does not exist, something went wrong
             if (session == null)
                 return BadRequest("Session not found");
 
-            // Check the session's payment status directly
+            // Verify that the payment was actually completed. This is important so users cannot fake successful payment
             if (session.PaymentStatus != "paid")
             {
                 return BadRequest("Payment not completed");
             }
 
-            return Ok(new
-            {
-                session.Id,
-                AmountTotal = session.AmountTotal,
-                Currency = session.Currency,
-                CustomerDetails = session.CustomerDetails,
-                ShippingDetails = session.CustomerDetails?.Address
-            });
+            // If payment is calid, return relevant order information. This data can be shown on the confirmation page
+            return Ok(new { });
         }
-
     }
 }
