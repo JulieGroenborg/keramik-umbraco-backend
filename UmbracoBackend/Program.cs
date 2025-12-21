@@ -1,5 +1,8 @@
 using DotNetEnv;       // For .env support
 using Stripe;
+using Umbraco.Cms.Core.Notifications;
+using UmbracoBackend.Handlers; 
+using UmbracoBackend.Helpers;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,9 @@ StripeConfiguration.ApiKey = stripeKey;
 // 3️⃣ Register controllers
 builder.Services.AddControllers();
 
+// singleton gør, at der kun oprettes én instans af StockService i hele applikationen
+builder.Services.AddSingleton<IStockService, StockService>();
+
 // 4️⃣ Secure CORS policy
 builder.Services.AddCors(options =>
 {
@@ -26,7 +32,7 @@ builder.Services.AddCors(options =>
                 "https://keramik-nextjs-frontend.vercel.app"     // Production frontend
             )
             .WithHeaders("Content-Type")          // Allow only needed headers
-            .WithMethods("GET", "POST");          // Allow only needed methods
+            .WithMethods("GET", "POST");          // Allow only needed methods (SSE bruger GET)
     });
 });
 
@@ -36,6 +42,7 @@ builder.CreateUmbracoBuilder()
     .AddWebsite()
     .AddDeliveryApi()
     .AddComposers()
+    .AddNotificationHandler<ContentPublishedNotification, StockNotificationHandler>()
     .Build();
 
 WebApplication app = builder.Build();
@@ -59,7 +66,7 @@ app.UseUmbraco()
         u.UseWebsiteEndpoints();
     });
 
-// 8️⃣ Map your API controllers
+// bruges til stock controlleren i forhold til SSE
 app.MapControllers();
 
 await app.RunAsync();
