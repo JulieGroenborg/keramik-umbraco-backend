@@ -16,6 +16,11 @@ StripeConfiguration.ApiKey = stripeKey;
 // 3️⃣ Register controllers
 builder.Services.AddControllers();
 
+// Registrerer IHttpClientFactory. Dette er nødvendigt for at vores controller 
+// kan lave sikre server-til-server kald til Umbraco Delivery API.
+// Vi bruger det til at validere priser og navne, så vi ikke stoler på frontenden.
+builder.Services.AddHttpClient();
+
 // 4️⃣ Secure CORS policy
 builder.Services.AddCors(options =>
 {
