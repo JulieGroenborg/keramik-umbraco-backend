@@ -4,6 +4,7 @@ using Stripe.Checkout;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
 
 namespace server.Controllers
 {
@@ -13,30 +14,36 @@ namespace server.Controllers
     {
         private readonly IContentService _contentService;
         private readonly IUmbracoContextFactory _contextFactory;
+        private readonly IConfiguration _configuration;
 
         // --- SIKKERHED ---
         // Semaphore sikrer, at vi kun håndterer én lageropdatering ad gangen (undgår race conditions).
         private static readonly SemaphoreSlim _inventoryLock = new SemaphoreSlim(1, 1);
 
-        // Din Webhook Secret fra Stripe CLI
-        private const string WebhookSecret = "...."; 
-
-        public StripeWebhookController(IContentService contentService, IUmbracoContextFactory contextFactory)
+        public StripeWebhookController(
+            IContentService contentService, 
+            IUmbracoContextFactory contextFactory, 
+            IConfiguration configuration) // Injiceres her
         {
             _contentService = contentService;
             _contextFactory = contextFactory;
+            _configuration = configuration;
         }
 
         [HttpPost]
         public async Task<IActionResult> Index()
         {
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            // Henter nøglen direkte fra .env via IConfiguration
+            var webhookSecret = _configuration["STRIPE_WEBHOOK_SECRET"];
+            Console.WriteLine($"DEBUG: Min secret er: {webhookSecret ?? "HELT TOM"}");
+            
             try
             {
                 var stripeEvent = EventUtility.ConstructEvent(
                     json,
                     Request.Headers["Stripe-Signature"],
-                    WebhookSecret
+                    webhookSecret
                 );
 
                 // Vi reagerer kun på 'checkout.session.completed'
