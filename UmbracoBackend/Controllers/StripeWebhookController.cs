@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace server.Controllers
 {
+    /// Denne controller fungerer som et "Webhook" endpoint. Stripe sender automatiske beskeder herhen, når en begivenhed sker i deres system (f.eks. en fuldført betaling).
+    /// </summary>
     [Route("stripe-api/webhook")]
     [ApiController]
     public class StripeWebhookController : ControllerBase
@@ -16,14 +18,14 @@ namespace server.Controllers
         private readonly IUmbracoContextFactory _contextFactory;
         private readonly IConfiguration _configuration;
 
-        // --- SIKKERHED ---
-        // Semaphore sikrer, at vi kun håndterer én lageropdatering ad gangen (undgår race conditions).
+        // --- SIKKERHED: LAGERSTYRING ---
+        // SemaphoreSlim(1, 1) sikrer "Thread Safety". Hvis to kunder køber den sidste vare præcis samtidig, sørger denne lock for, at de ikke begge når at trække fra lageret, før den første har opdateret værdien. Det forhindrer race conditions:
         private static readonly SemaphoreSlim _inventoryLock = new SemaphoreSlim(1, 1);
 
         public StripeWebhookController(
             IContentService contentService, 
             IUmbracoContextFactory contextFactory, 
-            IConfiguration configuration) // Injiceres her
+            IConfiguration configuration)
         {
             _contentService = contentService;
             _contextFactory = contextFactory;
@@ -33,61 +35,70 @@ namespace server.Controllers
         [HttpPost]
         public async Task<IActionResult> Index()
         {
+            // Vi læser den rå JSON fra Stripe-kaldet
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-            // Henter nøglen direkte fra .env via IConfiguration
+            
+            // Henter den hemmelige Webhook-nøgle fra .env (bruges til at verificere at kaldet rent faktisk kommer fra Stripe)
             var webhookSecret = _configuration["STRIPE_WEBHOOK_SECRET"];
-            Console.WriteLine($"DEBUG: Min secret er: {webhookSecret ?? "HELT TOM"}");
             
             try
             {
+                // Sikkerhedstjek: Vi verificerer signaturen for at sikre, at data ikke er blevet manipuleret.
                 var stripeEvent = EventUtility.ConstructEvent(
                     json,
                     Request.Headers["Stripe-Signature"],
                     webhookSecret
                 );
 
-                // Vi reagerer kun på 'checkout.session.completed'
+                // Vi reagerer kun, når en betaling er fuldført (Checkout Session Completed)
                 if (stripeEvent.Type == "checkout.session.completed")
                 {
                     if (stripeEvent.Data.Object is Session session && !string.IsNullOrEmpty(session.Id))
                     {
                         var service = new SessionLineItemService();
                         var options = new SessionLineItemListOptions();
-                        options.AddExpand("data.price.product"); // Så vi kan læse metadata
+                        
+                        // Vi "expander" produkt-dataen, så vi kan læse den metadata (umbracoId), vi gemte i Session-oprettelsen.
+                        options.AddExpand("data.price.product"); 
                         
                         var lineItems = service.List(session.Id, options);
 
+                        // Vi aktiverer vores lager-lock her, før vi begynder at rette i Umbraco-noderne.
                         await _inventoryLock.WaitAsync();
                         try 
                         {
                             foreach (var item in lineItems)
                             {
-                                // Vi sender session.PaymentIntentId med, så vi kan refundere hvis nødvendigt
+                                // session.PaymentIntentId skal bruges, hvis vi bliver nødt til at lave en automatisk refundering.
                                 await UpdateUmbracoStock(item, session.PaymentIntentId);
                             }
                         }
                         finally 
                         {
+                            // VIGTIGT: Frigiv altid locken, uanset om opdateringen lykkedes eller fejlede.
                             _inventoryLock.Release();
                         }
                     }
                 }
 
-                return Ok();
+                return Ok(); // Vi sender 200 OK tilbage til Stripe, så de ved, vi har modtaget beskeden.
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Webhook Error: {e.Message}");
-                return BadRequest();
+                return BadRequest(); // Ved fejl sender vi 400, så Stripe ved, de skal prøve igen senere.
             }
         }
 
+        /// <summary>
+        /// Opdaterer lageret i Umbraco baseret på de købte varer.
+        /// </summary>
         private async Task UpdateUmbracoStock(LineItem item, string paymentIntentId)
         {
             var productService = new ProductService();
             var product = await productService.GetAsync(item.Price.ProductId);
 
-            // Tjek om vi har vores Umbraco GUID gemt i Stripes metadata
+            // Vi finder vores Umbraco GUID, som blev gemt i Stripes metadata under checkout-oprettelsen.
             if (product.Metadata.TryGetValue("umbracoId", out string? guidString) && !string.IsNullOrEmpty(guidString))
             {
                 Guid productGuid = Guid.Parse(guidString);
@@ -102,27 +113,29 @@ namespace server.Controllers
                         int quantityBought = (int)(item.Quantity ?? 0);
 
                         // --- LOGIK FOR REFUNDERING VED OVERSALG ---
+                        // Hvis lageret er blevet tomt siden kunden startede deres betaling (f.eks. ved langsom betaling), så refunderer vi automatisk pengene i stedet for at sælge en vare, vi ikke har.
                         if (currentStock < quantityBought)
                         {
-                            Console.WriteLine($"ADVARSEL: Oversalg af {content.Name}! Lager: {currentStock}. Refunderer nu...");
+                            Console.WriteLine($"ADVARSEL: Oversalg af {content.Name}! Refunderer nu...");
                             
                             var refundOptions = new RefundCreateOptions
                             {
-                                PaymentIntent = paymentIntentId, // ID på selve betalingen
-                                Reason = RefundReasons.RequestedByCustomer // Standard årsag
+                                PaymentIntent = paymentIntentId, 
+                                Reason = RefundReasons.RequestedByCustomer
                             };
                             
                             var refundService = new RefundService();
                             await refundService.CreateAsync(refundOptions);
                             
-                            Console.WriteLine($"SUCCESS: Beløb for {content.Name} er sendt retur til kunden.");
-                            return; // Stop her - vi skal ikke opdatere lageret til et negativt tal
+                            return; // Vi stopper her, så lageret ikke bliver negativt.
                         }
 
                         // --- NORMAL LAGEROPDATERING ---
                         int newStock = currentStock - quantityBought;
-
                         content.SetValue("stockQuantity", newStock);
+
+                        // Gemmer og udgiver ændringen i Umbraco. 
+                        // Dette vil også trigge en ContentPublishedNotification, som sender SSE-beskeder til frontenden.
                         _contentService.SaveAndPublish(content);
                         
                         Console.WriteLine($"SUCCESS: Lager opdateret for {content.Name}. {currentStock} -> {newStock}");
