@@ -6,37 +6,60 @@ using UmbracoBackend.Helpers;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// 1️⃣ Load environment variables from .env
-Env.Load(); 
+// --- 1️⃣ KONFIGURATION AF MILJØVARIABLER ---
 
-// 2️⃣ Read Stripe secret key and set globally
-var stripeKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+// Vi finder den præcise sti til .env filen i projekt-roden.
+// Directory.GetCurrentDirectory() sikrer, at vi kigger i roden selvom appen kører fra bin-mappen.
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+DotNetEnv.Env.Load(envPath);
+
+// Dette overfører variablerne fra DotNetEnv til .NET's interne konfigurations-system.
+// Uden denne linje vil dine controllers (via IConfiguration) se værdierne som 'null'.
+builder.Configuration.AddEnvironmentVariables();
+
+// TEST (Valgfri): Bekræfter i terminalen ved opstart at builder kan se din secret.
+// Console.WriteLine($"BUILDER KONFIGURATION TEST: {builder.Configuration["STRIPE_WEBHOOK_SECRET"]}");
+
+
+// --- 2️⃣ STRIPE GLOBALE INDSTILLINGER ---
+
+// Vi læser den hemmelige Stripe API nøgle direkte fra konfigurationen.
+var stripeKey = builder.Configuration["STRIPE_SECRET_KEY"];
 if (string.IsNullOrEmpty(stripeKey))
-    throw new Exception("Stripe secret key is not set in environment variables.");
+    throw new Exception("FEJL: Stripe secret key mangler i .env filen.");
 
 StripeConfiguration.ApiKey = stripeKey;
 
-// 3️⃣ Register controllers
+
+// --- 3️⃣ SERVICES & CONTROLLERS ---
+
 builder.Services.AddControllers();
 
-// singleton gør, at der kun oprettes én instans af StockService i hele applikationen
+// Singleton sikrer, at der kun findes én instans af StockService i hukommelsen.
 builder.Services.AddSingleton<IStockService, StockService>();
 
-// 4️⃣ Secure CORS policy
+// HttpClient bruges til sikre server-til-server kald (f.eks. validering mod Delivery API).
+builder.Services.AddHttpClient();
+
+
+// --- 4️⃣ CORS SIKKERHEDSPOLITIK ---
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SecureFrontend", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:3000",                         // Local dev frontend
-                "https://keramik-nextjs-frontend.vercel.app"     // Production frontend
+                "http://localhost:3000",                         // Lokal udvikling
+                "https://keramik-nextjs-frontend.vercel.app"     // Produktion
             )
-            .WithHeaders("Content-Type")          // Allow only needed headers
-            .WithMethods("GET", "POST");          // Allow only needed methods (SSE bruger GET)
+            .WithHeaders("Content-Type")          
+            .WithMethods("GET", "POST");          
     });
 });
 
-// 5️⃣ Build Umbraco
+
+// --- 5️⃣ UMBRACO OPSÆTNING ---
+
 builder.CreateUmbracoBuilder()
     .AddBackOffice()
     .AddWebsite()
@@ -47,11 +70,13 @@ builder.CreateUmbracoBuilder()
 
 WebApplication app = builder.Build();
 
-// 6️⃣ Boot Umbraco
+
+// --- 6️⃣ BOOT & MIDDLEWARE ---
+
 await app.BootUmbracoAsync();
 
-// 7️⃣ Configure middleware and endpoints
-app.UseCors("SecureFrontend");  // Apply CORS **before controllers**
+// CORS skal påføres før controllers for at virke korrekt.
+app.UseCors("SecureFrontend");
 
 app.UseUmbraco()
     .WithMiddleware(u =>
@@ -66,7 +91,7 @@ app.UseUmbraco()
         u.UseWebsiteEndpoints();
     });
 
-// bruges til stock controlleren i forhold til SSE
+// Mapper API-routes (vigtigt for din StripeWebhookController og StockController).
 app.MapControllers();
 
 await app.RunAsync();
