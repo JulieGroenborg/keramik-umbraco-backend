@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - postman
 
 jobs:
   statiske-tests:
