@@ -52,7 +52,5 @@ jobs:
         run: npm install -g newman
 
       - name: Run Postman tests with Newman # kører vores Postman tests
-        run: |
-          newman run postman/backend-collection.json \
-            --env-var baseUrl=http://localhost:5000
+        run: newman run postman/keramik.postman_collection.json -e postman/keramik.postman_environment.json
         # Giver postman en variabel

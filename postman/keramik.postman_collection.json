@@ -1,0 +1,888 @@
+{
+	"info": {
+		"_postman_id": "28aaeda7-7412-48b9-8d24-d9c4af0a81af",
+		"name": "keramik",
+		"description": "Comprehensive tests for Stripe Checkout, Webhooks, and Umbraco Stock Logic.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39187798"
+	},
+	"item": [
+		{
+			"name": "get pages",
+			"item": [
+				{
+					"name": "get forside",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Keramik med kærlighed\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/forside",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"forside"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get shop",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Kategori\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(300);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/shop",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"shop"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get om mig",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Ægte håndlavet keramik fra Danmark\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(300);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/om-mig",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"om-mig"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get kontakt",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Julieeriksen09@hotmail.com\");\r",
+									"}); \r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(300);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/kontakt",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"kontakt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get produkt",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Pris\");\r",
+									"});\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(300);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/shop/kopper/glad-kop",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"shop",
+								"kopper",
+								"glad-kop"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "checkout",
+			"item": [
+				{
+					"name": "valid id 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+									"",
+									"pm.test('Returns valid Stripe URL', () => pm.expect(pm.response.json().url).to.include('checkout.stripe.com'));",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"id\": \"{{valid_guid}}\", \"quantity\": 1}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "empty cart 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400', () => pm.response.to.have.status(400));",
+									"",
+									"pm.test('Error is Cart is empty', () => pm.expect(pm.response.json().error).to.eql('Cart is empty'));",
+									"",
+									"pm.test(\"Response time is less than 200ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "no stock 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400', () => pm.response.to.have.status(400));",
+									"",
+									"pm.test('Message contains stock warning', () => pm.expect(pm.response.json().error).to.include('Der er ikke nok på lager'));",
+									"",
+									"pm.test(\"Response time is less than 200ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"id\": \"{{out_of_stock_guid}}\", \"quantity\": 1}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "exceeded stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Der er ikke nok på lager\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"id\": \"4f016ba8-5a14-4f55-a157-014eff5f32a4\",\r\n    \"quantity\": 999\r\n  }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "unpublished node 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should reject unpublished items', () => pm.response.to.have.status(400));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"No valid products found\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"id\": \"{{unpublished_guid}}\", \"quantity\": 1}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "negative quantity 500",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 500\", function () {\r",
+									"    pm.response.to.have.status(500);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"id\": \"{{valid_guid}}\", \"quantity\": -5}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid id 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Handle missing GUID gracefully', () => pm.response.to.have.status(400));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"No valid products\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"id\": \"00000000-0000-0000-0000-000000000000\", \"quantity\": 1}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "duplicate items 200 (hvis 2 eller mere i stock)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Process duplicates', () => pm.response.to.have.status(200));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"https://checkout.stripe.com\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\"id\": \"{{valid_guid}}\", \"quantity\": 1}, {\"id\": \"{{valid_guid}}\", \"quantity\": 1}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/create-checkout-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"create-checkout-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "no session id 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400', () => pm.response.to.have.status(400));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"The sessionId field is required.\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stripe-api/verify-session",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"verify-session"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid session id 500",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Forevnter error på invalid id', () => pm.response.to.have.status(500));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Kunne ikke verificere\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stripe-api/verify-session?sessionId=fake_id_123",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"verify-session"
+							],
+							"query": [
+								{
+									"key": "sessionId",
+									"value": "fake_id_123"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid stripe signatur 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Rejects unsigned webhook', () => pm.response.to.have.status(400));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Bad Request\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"id\": \"evt_123\", \"type\": \"checkout.session.completed\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/webhook",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"webhook"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "no stripe signatur 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Rejects unsigned webhook', () => pm.response.to.have.status(400));\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Bad Request\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than 200ms\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/stripe-api/webhook",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"webhook"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"success\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stripe-api/verify-session?sessionId=cs_test_a1SjjBA1RIbz0c9erHXutRR5vVauFCxfB2IkX6bVqm7fbxqD6xL639dYJW",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"verify-session"
+							],
+							"query": [
+								{
+									"key": "sessionId",
+									"value": "cs_test_a1SjjBA1RIbz0c9erHXutRR5vVauFCxfB2IkX6bVqm7fbxqD6xL639dYJW"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify refunded",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Body matches string\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"refunded\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stripe-api/verify-session?sessionId=cs_test_a13SlnIWrZoyjiq3XprP5tDSwKFtInTWUYlbTr5UdibOFchWdDnho9tWTu",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stripe-api",
+								"verify-session"
+							],
+							"query": [
+								{
+									"key": "sessionId",
+									"value": "cs_test_a13SlnIWrZoyjiq3XprP5tDSwKFtInTWUYlbTr5UdibOFchWdDnho9tWTu"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.collectionVariables.set('base_url', 'http://localhost:51857');",
+					"pm.collectionVariables.set('valid_guid', '1ceb8771-9542-4a1b-967d-b9919131f951');",
+					"pm.collectionVariables.set('out_of_stock_guid', '4f016ba8-5a14-4f55-a157-014eff5f32a4');",
+					"pm.collectionVariables.set('unpublished_guid', '62d4cea7-9135-4e19-aa18-bddced283215');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": ""
+		},
+		{
+			"key": "valid_guid",
+			"value": ""
+		},
+		{
+			"key": "out_of_stock_guid",
+			"value": ""
+		},
+		{
+			"key": "unpublished_guid",
+			"value": ""
+		}
+	]
+}
