@@ -14,9 +14,20 @@ jobs:
       - name: Checkout code # bruges af github til at hente vores filer ind i ubuntu serveren
         uses: actions/checkout@v4
 
-      # Placeholder: skal replaces når vi har konkrete static checks at køre
-      - name: Static checks placeholder
-        run: echo "Her kan vi tilføje statiske tests senere"
+# 1. YAML Lint: Tjekker om vores workflow yaml filer er formattet
+      - name: YAML Lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .github/workflows/
+          config_data: "{extends: default, rules: {line-length: disable}}"
+
+      # 2. C# Linting
+      - name: Check C# Formatting
+        run: dotnet format UmbracoBackend/UmbracoBackend.csproj --verify-no-changes
+
+      # 3. Security Scan: Tjekker NuGet-pakker for kendte sårbarheder (CVE'er)
+      - name: NuGet Vulnerability Scan
+        run: dotnet list UmbracoBackend/UmbracoBackend.csproj package --vulnerable --include-transitive
 
   api-tests:
     runs-on: ubuntu-latest
