@@ -13,7 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Static checks placeholder
         run: echo "Her kan vi tilføje statiske tests senere"
 
@@ -43,21 +42,22 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
-      - name: Build and Start Backend
+      - name: Start Umbraco Backend
         env:
-          Stripe__SecretKey: ${{ secrets.STRIPE_SECRET_KEY }}
+          # RETTELSE: Navnet skal matche builder.Configuration["STRIPE_SECRET_KEY"] i Program.cs
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           ASPNETCORE_ENVIRONMENT: Development
         run: |
           dotnet restore UmbracoBackend/UmbracoBackend.csproj
-          dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release
-          # Vi starter backenden og dumper loggen til en fil, så vi kan se den hvis det fejler
+          dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
+          # Vi starter backenden og dumper loggen til en fil til fejlsøgning
           dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://0.0.0.0:51857" > backend.log 2>&1 &
           
       - name: Wait for Backend (Health Check)
         run: |
           echo "Venter på at backenden svarer på port 51857..."
-          # Denne løkke tjekker hvert 5. sekund i op til 2 minutter
           for i in {1..24}; do
+            # Vi tjekker om API'et svarer
             if curl -s http://localhost:51857/umbraco/delivery/api/v1/content > /dev/null; then
               echo "Backend er oppe!"
               exit 0
@@ -73,12 +73,12 @@ jobs:
         run: |
           cd frontend-repo/frontend/keramik-app
           npm install
-          # Vi indsprøjter URL'en her for at være 100% sikre
+          # Vi sikrer os at frontenden ved hvor backenden bor
           NEXT_PUBLIC_UMBRACO_URL="http://localhost:51857/umbraco/delivery/api/v1" npm run dev &
-          echo "Venter 15 sekunder på frontenden..."
-          sleep 15
+          echo "Venter 20 sekunder på frontenden..."
+          sleep 20
 
-      - name: Run Postman tests
+      - name: Run Postman tests with Newman
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           VALID_GUID: ${{ secrets.VALID_GUID }}
