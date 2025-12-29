@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: JulieGroenborg/keramik-nextjs-frontend
-          path: frontend-repo # Henter koden ind i denne undermappe
+          path: frontend-repo
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -44,20 +44,25 @@ jobs:
         run: npm install -g newman
 
       - name: Start Frontend (Next.js)
-        # Navigerer til den korrekte mappe og starter i baggrunden
+        # Bruger port 3000 som defineret i dine Postman-tests
         run: |
           cd frontend-repo/frontend/keramik-app && npm install && npm run dev &
-        
-      - name: Build and Start Backend (Umbraco)
-        # Bruger port 51857 som defineret i dine hemmeligheder
+
+      - name: Start Umbraco Backend
+        env:
+          # Vigtigt: Backenden skal bruge sin secret key for at kunne starte/verificere sessions
+          Stripe__SecretKey: ${{ secrets.STRIPE_SECRET_KEY }}
+          ASPNETCORE_ENVIRONMENT: Development
         run: |
           dotnet restore UmbracoBackend/UmbracoBackend.csproj
           dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
-          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:51857 &
+          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://localhost:51857" &
 
-      - name: Wait for services
-        # Giver begge servere tid til at starte op før testene kører
-        run: sleep 35
+      - name: Wait for services to be ready
+        # Øget til 60s pga. Umbraco startup-tid i CI
+        run: |
+          echo "Venter 60 sekunder på at services er klar..."
+          sleep 60
 
       - name: Run Postman tests with Newman
         env:
