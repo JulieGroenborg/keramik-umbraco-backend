@@ -53,5 +53,16 @@ jobs:
         run: npm install -g newman
 
       - name: Run Postman tests with Newman # kører vores Postman tests
-        run: newman run postman/keramik.postman_collection.json -e postman/keramik.postman_environment.json
-        # Giver postman en variabel
+        env:
+          # Henter dine hemmelige data fra GitHub Secrets
+          BASE_URL: ${{ secrets.BASE_URL }}
+          VALID_GUID: ${{ secrets.VALID_GUID }}
+          OUT_OF_STOCK: ${{ secrets.OUT_OF_STOCK_GUID }}
+          UNPUBLISHED: ${{ secrets.UNPUBLISHED_GUID }}
+        run: |
+          newman run postman/keramik.postman_collection.json \
+            -e postman/keramik.postman_environment.json \
+            --env-var "base_url=$BASE_URL" \
+            --env-var "valid_guid=$VALID_GUID" \
+            --env-var "out_of_stock_guid=$OUT_OF_STOCK" \
+            --env-var "unpublished_guid=$UNPUBLISHED"
