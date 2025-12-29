@@ -85,7 +85,8 @@ if (app.Environment.IsEnvironment("Testing"))
     using (var scope = app.Services.CreateScope())
     {
         var contentService = scope.ServiceProvider.GetRequiredService<IContentService>();
-        UmbracoBackend.Helpers.DataSeeder.Seed(contentService);
+        var examineManager = scope.ServiceProvider.GetRequiredService<IExamineManager>(); // Hent denne
+        UmbracoBackend.Helpers.DataSeeder.Seed(contentService, examineManager);
     }
 }
 
