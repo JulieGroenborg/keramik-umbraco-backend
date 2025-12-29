@@ -15,6 +15,17 @@ jobs:
   api-tests:
     runs-on: ubuntu-latest
     needs: statiske-tests
+    
+    # 1. Opretter en SQL Server database i pipelinen
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "StrongPassword123!" # Matcher din lokale kode
+        ports:
+          - 1433:1433
+
     steps:
       - name: Checkout Backend
         uses: actions/checkout@v4
@@ -38,8 +49,12 @@ jobs:
 
       - name: Start Umbraco Backend
         env:
+          # Vigtigt: Overskriver connection string så den peger på SQL containeren
+          ConnectionStrings__umbracoDbDSN: "Server=localhost,1433;Database=UmbracoDb;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;"
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           ASPNETCORE_ENVIRONMENT: Development
+          # Tvinger uSync til at importere dine sider og produkter ved opstart
+          uSync__Settings__Import: "All"
         run: |
           dotnet restore UmbracoBackend/UmbracoBackend.csproj
           dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
@@ -47,23 +62,28 @@ jobs:
           
       - name: Wait for Backend (Health Check)
         run: |
-          echo "Venter på at backenden svarer på port 51857..."
+          echo "Venter på at backenden (51857) svarer..."
           for i in {1..24}; do
+            # Vi tjekker om Delivery API'et svarer
             if curl -s http://localhost:51857/umbraco/delivery/api/v1/content > /dev/null; then
-              echo "Backend er oppe!"
+              echo "Backend er oppe og uSync er klar!"
               exit 0
             fi
+            echo "Venter stadig... ($i/24)"
             sleep 5
           done
           echo "FEJL: Backenden startede ikke. Log:" && cat backend.log && exit 1
 
       - name: Start Frontend
         run: |
-          cd frontend-repo/frontend/keramik-app && npm install
+          cd frontend-repo/frontend/keramik-app
+          npm install
           NEXT_PUBLIC_UMBRACO_URL="http://localhost:51857/umbraco/delivery/api/v1" npm run dev &
-          sleep 20
+          
+          echo "Venter på at frontenden (3000) svarer..."
+          timeout 60s bash -c 'until curl -s localhost:3000 > /dev/null; do sleep 5; done'
 
-      - name: Run Newman
+      - name: Run Newman Tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           VALID_GUID: ${{ secrets.VALID_GUID }}
