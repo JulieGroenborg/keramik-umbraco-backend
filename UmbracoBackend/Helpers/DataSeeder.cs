@@ -15,7 +15,7 @@ namespace UmbracoBackend.Helpers
             {
                 root = contentService.Create("Forside", -1, "frontpage");
                 root.SetValue("title", "Keramik med kærlighed");
-                root.SetValue("subtitle", "Velkommen til min butik"); 
+                root.SetValue("subtitle", "Velkommen til min butik"); // Obligatorisk felt
                 contentService.SaveAndPublish(root);
             }
 
@@ -31,33 +31,34 @@ namespace UmbracoBackend.Helpers
             if (!contentService.GetPagedChildren(root.Id, 0, 10, out _).Any(x => x.Name == "Kontakt"))
             {
                 var kontakt = contentService.Create("Kontakt", root.Id, "contentPage");
-                // Newman leder efter denne email i body-teksten
                 kontakt.SetValue("title", "Kontakt mig på Julieeriksen09@hotmail.com");
                 contentService.SaveAndPublish(kontakt);
             }
 
-            // 4. Shop (Alias: shop)
+            // 4. Shop & Kategori (Newman forventer /shop/kopper/...)
             var shop = contentService.GetPagedChildren(root.Id, 0, 10, out _).FirstOrDefault(x => x.ContentType.Alias == "shop");
             if (shop == null)
             {
                 shop = contentService.Create("Shop", root.Id, "shop");
-                shop.SetValue("title", "Kategori");
+                shop.SetValue("title", "Vores Shop");
                 contentService.SaveAndPublish(shop);
             }
 
-            // 5. Produkter med de GUID'er dine tests forventer
-            var shopId = shop?.Id ?? root.Id;
+            var kategori = contentService.GetPagedChildren(shop.Id, 0, 10, out _).FirstOrDefault(x => x.Name == "kopper");
+            if (kategori == null)
+            {
+                // Bruger 'category' alias fra din uSync
+                kategori = contentService.Create("kopper", shop.Id, "category");
+                kategori.SetValue("title", "Kopper");
+                contentService.SaveAndPublish(kategori);
+            }
 
-            // Valid produkt: "Glad kop"
-            SeedProduct(contentService, shopId, "Glad kop", new Guid("1ceb8771-9542-4a1b-967d-b9919131f951"), 10);
-            
-            // Udsolgt produkt: "Udsolgt kop"
-            SeedProduct(contentService, shopId, "Udsolgt kop", new Guid("4f016ba8-5a14-4f55-a157-014eff5f32a4"), 0);
-            
-            // Ikke-udgivet produkt: "Ikke udgivet kop" (publish = false)
-            SeedProduct(contentService, shopId, "Ikke udgivet kop", new Guid("62d4cea7-9135-4e19-aa18-bddced283215"), 5, false);
+            // 5. Produkter under kategorien
+            SeedProduct(contentService, kategori.Id, "Glad kop", new Guid("1ceb8771-9542-4a1b-967d-b9919131f951"), 10);
+            SeedProduct(contentService, kategori.Id, "Udsolgt kop", new Guid("4f016ba8-5a14-4f55-a157-014eff5f32a4"), 0);
+            SeedProduct(contentService, kategori.Id, "Ikke udgivet kop", new Guid("62d4cea7-9135-4e19-aa18-bddced283215"), 5, false);
 
-            // 6. TVING INDEX REBUILD: Så Delivery API ser ændringerne med det samme
+            // 6. Genopbyg søgeindeks (Vigtigt for Delivery API)
             if (examineManager.TryGetIndex(Constants.UmbracoIndexes.ExternalIndexName, out var index))
             {
                 index.CreateIndex(); 
@@ -73,10 +74,8 @@ namespace UmbracoBackend.Helpers
                 product.SetValue("stock", stock);
                 product.SetValue("price", 100);
                 
-                if (publish)
-                    contentService.SaveAndPublish(product);
-                else
-                    contentService.Save(product);
+                if (publish) contentService.SaveAndPublish(product);
+                else contentService.Save(product);
             }
         }
     }
