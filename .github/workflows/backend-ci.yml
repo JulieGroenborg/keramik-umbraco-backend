@@ -11,50 +11,56 @@ jobs:
   statiske-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code # bruges af github til at hente vores filer ind i ubuntu serveren
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # Placeholder: skal replaces når vi har konkrete static checks at køre
       - name: Static checks placeholder
         run: echo "Her kan vi tilføje statiske tests senere"
 
   api-tests:
     runs-on: ubuntu-latest
-    needs: statiske-tests # bare så api-tests venter på at statiske-tests er færdig og køre kun, hvis den passer
-
+    needs: statiske-tests
     steps:
-      - name: Checkout code
+      - name: Checkout Backend
         uses: actions/checkout@v4
+
+      - name: Checkout Frontend
+        uses: actions/checkout@v4
+        with:
+          repository: JulieGroenborg/keramik-nextjs-frontend
+          path: frontend-repo # Henter koden ind i denne undermappe
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x" # skal lige finde ud af hvilken version vi skal bruge
+          dotnet-version: "8.0.x"
 
-      - name: Restore dependencies
-        run: dotnet restore UmbracoBackend/UmbracoBackend.csproj
-
-      - name: Build backend
-        run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore # Release for at køre et build der ligner produktion mest muligt, --no-restore fordi vi allerede har restored
-
-      - name: Start Umbraco backend
-        # for at sikre vi bruger den rigtige port
-        run: |
-          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:5000 &
-          echo "Giver lige umbraco 25 sekunder til at starte op"
-          sleep 25
-          
-      - name: Setup Node (Newman) # installerer Node så vi kan installere Newman
+      - name: Setup Node (Frontend & Newman)
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install Newman # så vi kan køre Postman tests
+      - name: Install Newman
         run: npm install -g newman
 
-      - name: Run Postman tests with Newman # kører vores Postman tests
+      - name: Start Frontend (Next.js)
+        # Navigerer til den korrekte mappe og starter i baggrunden
+        run: |
+          cd frontend-repo/frontend/keramik-app && npm install && npm run dev &
+        
+      - name: Build and Start Backend (Umbraco)
+        # Bruger port 51857 som defineret i dine hemmeligheder
+        run: |
+          dotnet restore UmbracoBackend/UmbracoBackend.csproj
+          dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
+          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:51857 &
+
+      - name: Wait for services
+        # Giver begge servere tid til at starte op før testene kører
+        run: sleep 35
+
+      - name: Run Postman tests with Newman
         env:
-          # Henter dine hemmelige data fra GitHub Secrets
           BASE_URL: ${{ secrets.BASE_URL }}
           VALID_GUID: ${{ secrets.VALID_GUID }}
           OUT_OF_STOCK: ${{ secrets.OUT_OF_STOCK_GUID }}
