@@ -11,7 +11,10 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 // Vi finder den præcise sti til .env filen i projekt-roden.
 // Directory.GetCurrentDirectory() sikrer, at vi kigger i roden selvom appen kører fra bin-mappen.
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
-DotNetEnv.Env.Load(envPath);
+if (File.Exists(envPath))
+{
+    DotNetEnv.Env.Load(envPath);
+}
 
 // Dette overfører variablerne fra DotNetEnv til .NET's interne konfigurations-system.
 // Uden denne linje vil dine controllers (via IConfiguration) se værdierne som 'null'.
