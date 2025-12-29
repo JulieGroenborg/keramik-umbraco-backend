@@ -28,7 +28,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x" # skal lige finde ud af hvilken version vi skal bruge
+          dotnet-version: "8.0.x"
 
       - name: Restore dependencies
         run: dotnet restore UmbracoBackend/UmbracoBackend.csproj
@@ -39,7 +39,7 @@ jobs:
       - name: Start Umbraco backend
         # for at sikre vi bruger den rigtige port
         run: |
-          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls http://localhost:5000 &
+          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://0.0.0.0:51857" &
           echo "Giver lige umbraco 25 sekunder til at starte op"
           sleep 25
           
@@ -51,8 +51,16 @@ jobs:
       - name: Install Newman # så vi kan køre Postman tests
         run: npm install -g newman
 
-      - name: Run Postman tests with Newman # kører vores Postman tests
-        run: |
-          newman run postman/backend-collection.json \
-            --env-var baseUrl=http://localhost:5000
-        # Giver postman en variabel
+      # - name: Run Newman Tests
+      #   env:
+      #     BASE_URL: {{ secrets.BASE_URL }}
+      #     VALID_GUID: {{ secrets.VALID_GUID }}
+      #     OUT_OF_STOCK_GUID: {{ secrets.OUT_OF_STOCK_GUID }}
+      #     UNPUBLISHED_GUID: {{ secrets.UNPUBLISHED_GUID }}
+      #   run: |
+      #     newman run postman/keramik.postman_collection.json \
+      #       -e postman/keramik.postman_environment.json \
+      #       --env-var "base_url=$BASE_URL" \
+      #       --env-var "valid_guid=$VALID_GUID" \
+      #       --env-var "out_of_stock_guid=$OUT_OF_STOCK_GUID" \
+      #       --env-var "unpublished_guid=$UNPUBLISHED_GUID"
