@@ -35,7 +35,7 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Setup Node (Frontend & Newman)
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -43,28 +43,42 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
-      - name: Start Frontend (Next.js)
-        # Bruger port 3000 som defineret i dine Postman-tests
-        run: |
-          cd frontend-repo/frontend/keramik-app && npm install && npm run dev &
-
-      - name: Start Umbraco Backend
+      - name: Build and Start Backend
         env:
-          # Vigtigt: Backenden skal bruge sin secret key for at kunne starte/verificere sessions
           Stripe__SecretKey: ${{ secrets.STRIPE_SECRET_KEY }}
           ASPNETCORE_ENVIRONMENT: Development
         run: |
           dotnet restore UmbracoBackend/UmbracoBackend.csproj
-          dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
-          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://localhost:51857" &
-
-      - name: Wait for services to be ready
-        # Øget til 60s pga. Umbraco startup-tid i CI
+          dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release
+          # Vi starter backenden og dumper loggen til en fil, så vi kan se den hvis det fejler
+          dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://0.0.0.0:51857" > backend.log 2>&1 &
+          
+      - name: Wait for Backend (Health Check)
         run: |
-          echo "Venter 60 sekunder på at services er klar..."
-          sleep 60
+          echo "Venter på at backenden svarer på port 51857..."
+          # Denne løkke tjekker hvert 5. sekund i op til 2 minutter
+          for i in {1..24}; do
+            if curl -s http://localhost:51857/umbraco/delivery/api/v1/content > /dev/null; then
+              echo "Backend er oppe!"
+              exit 0
+            fi
+            echo "Venter stadig... ($i/24)"
+            sleep 5
+          done
+          echo "FEJL: Backenden nåede ikke at starte op. Her er loggen:"
+          cat backend.log
+          exit 1
 
-      - name: Run Postman tests with Newman
+      - name: Start Frontend
+        run: |
+          cd frontend-repo/frontend/keramik-app
+          npm install
+          # Vi indsprøjter URL'en her for at være 100% sikre
+          NEXT_PUBLIC_UMBRACO_URL="http://localhost:51857/umbraco/delivery/api/v1" npm run dev &
+          echo "Venter 15 sekunder på frontenden..."
+          sleep 15
+
+      - name: Run Postman tests
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           VALID_GUID: ${{ secrets.VALID_GUID }}
