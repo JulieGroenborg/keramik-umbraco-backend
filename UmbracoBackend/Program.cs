@@ -11,7 +11,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 // Vi finder den præcise sti til .env filen i projekt-roden.
 // Directory.GetCurrentDirectory() sikrer, at vi kigger i roden selvom appen kører fra bin-mappen.
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
-if (File.Exists(envPath))
+if (System.IO.File.Exists(envPath))
 {
     DotNetEnv.Env.Load(envPath);
 }
