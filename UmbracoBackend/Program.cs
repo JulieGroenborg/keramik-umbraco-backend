@@ -78,6 +78,16 @@ WebApplication app = builder.Build();
 
 await app.BootUmbracoAsync();
 
+
+if (app.Environment.IsEnvironment("Testing"))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var contentService = scope.ServiceProvider.GetRequiredService<IContentService>();
+        UmbracoBackend.Helpers.DataSeeder.Seed(contentService);
+    }
+}
+
 // CORS skal påføres før controllers for at virke korrekt.
 app.UseCors("SecureFrontend");
 
