@@ -54,7 +54,7 @@ jobs:
           dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://0.0.0.0:51857" &
           echo "Giver lige umbraco 25 sekunder til at starte op"
           sleep 25
-          
+
       - name: Setup Node (Newman) # installerer Node så vi kan installere Newman
         uses: actions/setup-node@v4
         with:
@@ -63,7 +63,7 @@ jobs:
       - name: Install Newman # så vi kan køre Postman tests
         run: npm install -g newman
 
-      # - name: Run Newman Tests
+# - name: Run Newman Tests
       #   env:
       #     BASE_URL: {{ secrets.BASE_URL }}
       #     VALID_GUID: {{ secrets.VALID_GUID }}
