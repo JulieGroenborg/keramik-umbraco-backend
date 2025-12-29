@@ -1,5 +1,6 @@
 using DotNetEnv;       // For .env support
 using Stripe;
+using Examine;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Services; // Adds support for IContentService
 using UmbracoBackend.Handlers; 
