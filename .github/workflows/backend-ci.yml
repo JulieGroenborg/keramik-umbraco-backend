@@ -10,19 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Kører statiske checks..."
+      - run: echo "Running static analysis placeholders..."
 
   api-tests:
     runs-on: ubuntu-latest
     needs: statiske-tests
     
-    # 1. Opretter en SQL Server database i pipelinen
+    # Creates a real SQL Server instance in the pipeline environment
     services:
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: "Y"
-          MSSQL_SA_PASSWORD: "StrongPassword123!" # Matcher din lokale kode
+          MSSQL_SA_PASSWORD: "StrongPassword123!" # Matches your local setup
         ports:
           - 1433:1433
 
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: JulieGroenborg/keramik-nextjs-frontend
-          path: frontend-repo
+          path: frontend-repo # Fetches from separate repo into this folder
 
       - name: Setup .NET & Node
         uses: actions/setup-dotnet@v4
@@ -47,13 +47,28 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
+      - name: Prepare Database and Environment
+        # Fixes the Login Failed and DirectoryNotFound errors
+        run: |
+          # 1. Create missing media directory to prevent Umbraco crash
+          mkdir -p UmbracoBackend/wwwroot/media
+          
+          # 2. Wait for SQL Server container to be ready for commands
+          echo "Waiting for SQL Server..."
+          timeout 60s bash -c 'until docker exec $(docker ps -q --filter ancestor=mcr.microsoft.com/mssql/server:2022-latest) /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "StrongPassword123!" -Q "SELECT 1" > /dev/null 2>&1; do sleep 2; done'
+          
+          # 3. Manually create the database name your app expects
+          echo "Creating database UmbracoDb..."
+          docker exec $(docker ps -q --filter ancestor=mcr.microsoft.com/mssql/server:2022-latest) /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "StrongPassword123!" -Q "CREATE DATABASE UmbracoDb;"
+
       - name: Start Umbraco Backend
         env:
-          # Vigtigt: Overskriver connection string så den peger på SQL containeren
-          ConnectionStrings__umbracoDbDSN: "Server=localhost,1433;Database=UmbracoDb;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;"
+          # Injects your Stripe key into builder.Configuration["STRIPE_SECRET_KEY"]
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           ASPNETCORE_ENVIRONMENT: Development
-          # Tvinger uSync til at importere dine sider og produkter ved opstart
+          # Overrides connection string to point to the pipeline's SQL container
+          ConnectionStrings__umbracoDbDSN: "Server=localhost,1433;Database=UmbracoDb;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True;"
+          # Triggers uSync to build the site structure from your XML files
           uSync__Settings__Import: "All"
         run: |
           dotnet restore UmbracoBackend/UmbracoBackend.csproj
@@ -62,25 +77,25 @@ jobs:
           
       - name: Wait for Backend (Health Check)
         run: |
-          echo "Venter på at backenden (51857) svarer..."
+          echo "Waiting for backend (51857) to serve content..."
           for i in {1..24}; do
-            # Vi tjekker om Delivery API'et svarer
             if curl -s http://localhost:51857/umbraco/delivery/api/v1/content > /dev/null; then
-              echo "Backend er oppe og uSync er klar!"
+              echo "Backend is UP and database is ready!"
               exit 0
             fi
-            echo "Venter stadig... ($i/24)"
+            echo "Waiting... ($i/24)"
             sleep 5
           done
-          echo "FEJL: Backenden startede ikke. Log:" && cat backend.log && exit 1
+          echo "ERROR: Backend failed to start. Logs:" && cat backend.log && exit 1
 
       - name: Start Frontend
         run: |
           cd frontend-repo/frontend/keramik-app
           npm install
+          # Points the frontend to the backend running in the pipeline
           NEXT_PUBLIC_UMBRACO_URL="http://localhost:51857/umbraco/delivery/api/v1" npm run dev &
           
-          echo "Venter på at frontenden (3000) svarer..."
+          echo "Waiting for frontend (3000) health check..."
           timeout 60s bash -c 'until curl -s localhost:3000 > /dev/null; do sleep 5; done'
 
       - name: Run Newman Tests
