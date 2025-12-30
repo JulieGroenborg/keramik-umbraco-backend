@@ -1,7 +1,7 @@
 using DotNetEnv;       // For .env support
 using Stripe;
 using Umbraco.Cms.Core.Notifications;
-using UmbracoBackend.Handlers; 
+using UmbracoBackend.Handlers;
 using UmbracoBackend.Helpers;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -52,8 +52,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",                         // Lokal udvikling
                 "https://keramik-nextjs-frontend.vercel.app"     // Produktion
             )
-            .WithHeaders("Content-Type")          
-            .WithMethods("GET", "POST");          
+            .WithHeaders("Content-Type")
+            .WithMethods("GET", "POST");
     });
 });
 

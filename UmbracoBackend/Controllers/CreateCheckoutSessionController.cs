@@ -32,8 +32,8 @@ namespace server.Controllers
             {
                 // Vi bruger Umbraco Delivery API til at hente produktet via dets GUID
                 var umbracoUrl = $"http://localhost:51857/umbraco/delivery/api/v2/content/item/{item.Id}";
-                
-                try 
+
+                try
                 {
                     // Fetch the product from Umbraco
                     var product = await client.GetFromJsonAsync<UmbracoProductResponse>(umbracoUrl);
@@ -44,7 +44,7 @@ namespace server.Controllers
                     Console.WriteLine($"Kunde vil købe: {item.Quantity}");
                     Console.WriteLine($"Pris fundet: {product?.Properties?.Price}");
                     // ------------
-                    
+
                     if (product.Properties.StockQuantity < item.Quantity)
                     {
                         Console.WriteLine("LOGIK: Lager for lavt! Sender fejl til frontend.");
@@ -93,7 +93,7 @@ namespace server.Controllers
             {
                 LineItems = lineItems,
                 Mode = "payment",
-                ShippingAddressCollection = new 
+                ShippingAddressCollection = new
                 // Tillad kun forsendelse til specifikke lande
                 SessionShippingAddressCollectionOptions
                 {

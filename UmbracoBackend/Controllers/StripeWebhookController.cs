@@ -23,8 +23,8 @@ namespace server.Controllers
         private static readonly SemaphoreSlim _inventoryLock = new SemaphoreSlim(1, 1);
 
         public StripeWebhookController(
-            IContentService contentService, 
-            IUmbracoContextFactory contextFactory, 
+            IContentService contentService,
+            IUmbracoContextFactory contextFactory,
             IConfiguration configuration)
         {
             _contentService = contentService;
@@ -37,10 +37,10 @@ namespace server.Controllers
         {
             // Vi læser den rå JSON fra Stripe-kaldet
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-            
+
             // Henter den hemmelige Webhook-nøgle fra .env (bruges til at verificere at kaldet rent faktisk kommer fra Stripe)
             var webhookSecret = _configuration["STRIPE_WEBHOOK_SECRET"];
-            
+
             try
             {
                 // Sikkerhedstjek: Vi verificerer signaturen for at sikre, at data ikke er blevet manipuleret.
@@ -57,15 +57,15 @@ namespace server.Controllers
                     {
                         var service = new SessionLineItemService();
                         var options = new SessionLineItemListOptions();
-                        
+
                         // Vi "expander" produkt-dataen, så vi kan læse den metadata (umbracoId), vi gemte i Session-oprettelsen.
-                        options.AddExpand("data.price.product"); 
-                        
+                        options.AddExpand("data.price.product");
+
                         var lineItems = service.List(session.Id, options);
 
                         // Vi aktiverer vores lager-lock her, før vi begynder at rette i Umbraco-noderne.
                         await _inventoryLock.WaitAsync();
-                        try 
+                        try
                         {
                             foreach (var item in lineItems)
                             {
@@ -73,7 +73,7 @@ namespace server.Controllers
                                 await UpdateUmbracoStock(item, session.PaymentIntentId);
                             }
                         }
-                        finally 
+                        finally
                         {
                             // VIGTIGT: Frigiv altid locken, uanset om opdateringen lykkedes eller fejlede.
                             _inventoryLock.Release();
@@ -106,7 +106,7 @@ namespace server.Controllers
                 using (var contextReference = _contextFactory.EnsureUmbracoContext())
                 {
                     var content = _contentService.GetById(productGuid);
-                    
+
                     if (content != null)
                     {
                         int currentStock = content.GetValue<int>("stockQuantity");
@@ -117,16 +117,16 @@ namespace server.Controllers
                         if (currentStock < quantityBought)
                         {
                             Console.WriteLine($"ADVARSEL: Oversalg af {content.Name}! Refunderer nu...");
-                            
+
                             var refundOptions = new RefundCreateOptions
                             {
-                                PaymentIntent = paymentIntentId, 
+                                PaymentIntent = paymentIntentId,
                                 Reason = RefundReasons.RequestedByCustomer
                             };
-                            
+
                             var refundService = new RefundService();
                             await refundService.CreateAsync(refundOptions);
-                            
+
                             return; // Vi stopper her, så lageret ikke bliver negativt.
                         }
 
@@ -137,12 +137,12 @@ namespace server.Controllers
                         // Gemmer og udgiver ændringen i Umbraco. 
                         // Dette vil også trigge en ContentPublishedNotification, som sender SSE-beskeder til frontenden.
                         _contentService.SaveAndPublish(content);
-                        
+
                         Console.WriteLine($"SUCCESS: Lager opdateret for {content.Name}. {currentStock} -> {newStock}");
                     }
                 }
             }
-            else 
+            else
             {
                 Console.WriteLine($"FEJL: Ingen 'umbracoId' fundet for {item.Description}.");
             }

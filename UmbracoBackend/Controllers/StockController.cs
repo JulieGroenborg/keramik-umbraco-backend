@@ -39,11 +39,11 @@ namespace UmbracoBackend.Controllers
                         // vi laver dataen om til json
                         var stockData = new { productId = productId, stock = stock };
                         string json = System.Text.Json.JsonSerializer.Serialize(stockData);
-                        
+
                         // vi sender dataen til client som json (igennem tunellen)
                         byte[] dataBytes = Encoding.UTF8.GetBytes($"data: {json}\n\n");
                         await response.Body.WriteAsync(dataBytes, 0, dataBytes.Length);
-                        
+
                         // flush for at sikre at dataen bliver sendt med det samme
                         await response.Body.FlushAsync();
                     }

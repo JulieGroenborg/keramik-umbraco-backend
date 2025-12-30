@@ -23,7 +23,7 @@ namespace server.Controllers
             try
             {
                 var sessionService = new SessionService();
-                
+
                 // 1. Hent Checkout Sessionen fra Stripe
                 var session = sessionService.Get(sessionId);
 
@@ -52,15 +52,17 @@ namespace server.Controllers
 
                 if (isRefunded)
                 {
-                    return Ok(new { 
-                        status = "refunded", 
-                        message = "Oversalg konstateret. Beløbet er refunderet." 
+                    return Ok(new
+                    {
+                        status = "refunded",
+                        message = "Oversalg konstateret. Beløbet er refunderet."
                     });
                 }
                 // 4. Alt er i orden! 
                 // Betalingen er 'paid' og den er IKKE blevet refunderet.
-                return Ok(new { 
-                    status = "success", 
+                return Ok(new
+                {
+                    status = "success",
                 });
             }
             catch (StripeException e)
