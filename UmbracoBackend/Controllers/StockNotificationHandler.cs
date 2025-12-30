@@ -30,7 +30,7 @@ namespace UmbracoBackend.Handlers
                         // vi henter produkt ID og lagerantal
                         var productGuid = node.Key;
                         int nytLager = node.GetValue<int>("stockQuantity");
-                        
+
                         // vi sender lageropdateringen videre til StockService
                         _stockService.SendUpdate(productGuid, nytLager);
                     }

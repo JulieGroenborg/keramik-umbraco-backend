@@ -19,7 +19,7 @@ namespace UmbracoBackend.Helpers
         {
             int lyttere = OnUpdate?.GetInvocationList().Length ?? 0;
             Console.WriteLine($"[SERVICE] Sender signal for ID {productId}. Aktive lyttere: {lyttere}");
-            
+
             OnUpdate?.Invoke(productId, stock);
         }
     }
