@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - statictests
 
 jobs:
   statiske-tests:
@@ -27,6 +26,7 @@ jobs:
           config_data: |
             extends: default
             rules:
+              line-length: disable
               comments: disable
 
       - name: Check C# Formatting
