@@ -28,7 +28,6 @@ jobs:
             extends: default
             rules:
               line-length: disable
-              comments: disable
 
       - name: Check C# Formatting
         run: dotnet format UmbracoBackend/UmbracoBackend.csproj --verify-no-changes
