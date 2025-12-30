@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - statictests
 
 jobs:
   statiske-tests:
@@ -26,11 +27,7 @@ jobs:
           config_data: |
             extends: default
             rules:
-              line-length: disable
-              truthy: disable
-              document-start: disable
               comments: disable
-              comments-indentation: disable
 
       - name: Check C# Formatting
         run: dotnet format UmbracoBackend/UmbracoBackend.csproj --verify-no-changes
