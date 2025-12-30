@@ -52,7 +52,7 @@ jobs:
         run: dotnet restore UmbracoBackend/UmbracoBackend.csproj
 
       - name: Build backend
-        run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore  # Release for at køre et build der ligner produktion mest muligt, --no-restore fordi vi allerede har restored
+        run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore  # Release for at køre et build der ligner produktion mest muligt
 
       - name: Start Umbraco backend
         # for at sikre vi bruger den rigtige port
