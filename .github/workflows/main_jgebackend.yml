@@ -63,3 +63,4 @@ jobs:
           app-name: 'jgebackend'
           slot-name: 'Production'
           package: .
+          

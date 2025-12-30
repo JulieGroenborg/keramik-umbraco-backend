@@ -2,7 +2,7 @@
 name: Backend CI
 
 on:
-  pull_request: {}
+  pull_request:
   push:
     branches:
       - main
@@ -12,7 +12,7 @@ jobs:
   statiske-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code  # bruges af github til at hente vores filer ind i ubuntu serveren
+      - name: Checkout code  # bruges af github til at hente vores filer
         uses: actions/checkout@v4
 
       - name: Setup .NET
@@ -20,25 +20,29 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      # 1. YAML Lint: Tjekker om vores workflow yaml filer er formattet
+      # 1. YAML Lint: Konfigureret til at acceptere Prettier-format
       - name: YAML Lint
         uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: .github/workflows/
-          config_data: "{extends: default, rules: {line-length: disable}}"
+          config_data: |
+            extends: default
+            rules:
+              line-length: disable
+              truthy: disable
+              document-start: disable
+              comments: disable
+              comments-indentation: disable
 
-      # 2. C# Linting
       - name: Check C# Formatting
         run: dotnet format UmbracoBackend/UmbracoBackend.csproj --verify-no-changes
 
-      # 3. Security Scan: Tjekker NuGet-pakker for kendte sårbarheder (CVE'er)
       - name: NuGet Vulnerability Scan
         run: dotnet list UmbracoBackend/UmbracoBackend.csproj package --vulnerable --include-transitive
 
   api-tests:
     runs-on: ubuntu-latest
-    needs: statiske-tests  # bare så api-tests venter på at statiske-tests er færdig og køre kun, hvis den passer
-
+    needs: statiske-tests
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,33 +56,18 @@ jobs:
         run: dotnet restore UmbracoBackend/UmbracoBackend.csproj
 
       - name: Build backend
-        run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore  # Release for at køre et build der ligner produktion mest muligt
+        run: dotnet build UmbracoBackend/UmbracoBackend.csproj --configuration Release --no-restore
 
       - name: Start Umbraco backend
-        # for at sikre vi bruger den rigtige port
         run: |
           dotnet run --project UmbracoBackend/UmbracoBackend.csproj --urls "http://0.0.0.0:51857" &
           echo "Giver lige umbraco 25 sekunder til at starte op"
           sleep 25
 
-      - name: Setup Node (Newman)  # installerer Node så vi kan installere Newman
+      - name: Setup Node (Newman)
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install Newman  # så vi kan køre Postman tests
+      - name: Install Newman
         run: npm install -g newman
-
-      # - name: Run Newman Tests
-      #   env:
-      #     BASE_URL: ${{ secrets.BASE_URL }}
-      #     VALID_GUID: ${{ secrets.VALID_GUID }}
-      #     OUT_OF_STOCK_GUID: ${{ secrets.OUT_OF_STOCK_GUID }}
-      #     UNPUBLISHED_GUID: ${{ secrets.UNPUBLISHED_GUID }}
-      #   run: |
-      #     newman run postman/keramik.postman_collection.json \
-      #       -e postman/keramik.postman_environment.json \
-      #       --env-var "base_url=$BASE_URL" \
-      #       --env-var "valid_guid=$VALID_GUID" \
-      #       --env-var "out_of_stock_guid=$OUT_OF_STOCK_GUID" \
-      #       --env-var "unpublished_guid=$UNPUBLISHED_GUID"
